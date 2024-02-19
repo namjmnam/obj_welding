@@ -1,59 +1,7 @@
 import os
 from tkinter import filedialog
-import vtk
-
-def visualize_obj(file_path):
-    # Create a reader for the .obj file
-    reader = vtk.vtkOBJReader()
-    reader.SetFileName(file_path)
-    reader.Update()
-
-    # Create a mapper for the geometry
-    mapper = vtk.vtkPolyDataMapper()
-    mapper.SetInputConnection(reader.GetOutputPort())
-
-    # Create an actor to hold the geometry
-    actor = vtk.vtkActor()
-    actor.SetMapper(mapper)
-
-    # Create a renderer and add the actor to it
-    renderer = vtk.vtkRenderer()
-    renderer.AddActor(actor)
-    renderer.SetBackground(0.1, 0.2, 0.4)  # Set background color
-
-    # Create a render window
-    render_window = vtk.vtkRenderWindow()
-    render_window.AddRenderer(renderer)
-    render_window.SetWindowName("OBJ Viewer")
-
-    # Create a render window interactor
-    interactor = vtk.vtkRenderWindowInteractor()
-    interactor.SetRenderWindow(render_window)
-
-    # Initialize the interactor and start the rendering loop
-    render_window.Render()
-    interactor.Initialize()
-    interactor.Start()
-
-def get_faces(file_path):
-    faces = []  # Initialize an empty list to store faces
-
-    with open(file_path, 'r') as file:
-        for line in file:
-            if line.startswith('f '):  # Check if the line defines a face
-                # Extract the parts of the line after "f "
-                face_line = line.strip().split(' ')[1:]
-                
-                # For each part, split by '/' and take the first element (vertex index),
-                # then convert it to an integer. This ignores texture and normal indices.
-                face_vertices = [int(part.split('/')[0]) for part in face_line]
-                
-                # Add the list of vertex indices to the faces list
-                faces.append(face_vertices)
-
-    return faces
-
-# visualize_obj(obj_file)
+from package.utils import get_faces
+from package.utils import nan_correct
 
 # Get the script directory
 script_directory = os.path.dirname(os.path.abspath(__file__))
@@ -96,30 +44,12 @@ for f in edge_faces:
 print(cleaned_faces)
 
 # print("Subtracted and corrected faces with nans eliminated")
-modified_faces = []
-for lst in filtered_faces:
-    modified_list = []
-    for value in lst:
-        # Count the number of numbers in the first list that are smaller than the current value
-        count_smaller = sum(1 for num in nan_vertices if num < value)
-        # Subtract the count from the value
-        modified_value = value - count_smaller
-        modified_list.append(modified_value)
-    modified_faces.append(modified_list)
+modified_faces = nan_correct(filtered_faces, nan_vertices)
 # print(modified_faces)
 
 # print("Subtracted and corrected cleaned faces with nans eliminated")
-modified_cleaned_faces = []
-for lst in cleaned_faces:
-    modified_list = []
-    for value in lst:
-        # Count the number of numbers in the first list that are smaller than the current value
-        count_smaller = sum(1 for num in nan_vertices if num < value)
-        # Subtract the count from the value
-        modified_value = value - count_smaller
-        modified_list.append(modified_value)
-    modified_cleaned_faces.append(modified_list)
-# print(modified_faces)
+modified_cleaned_faces = nan_correct(cleaned_faces, nan_vertices)
+# print(modified_cleaned_faces)
 
 # Write to the output file
 obj_output = filedialog.asksaveasfilename(defaultextension='.obj',
