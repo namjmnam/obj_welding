@@ -6,7 +6,7 @@ from package.utils import nan_correct
 # Get the script directory
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
-obj_file = filedialog.askopenfilename(filetypes=[("OBJ files", "*.obj")], initialdir=script_directory)
+obj_file = filedialog.askopenfilename(filetypes=[("OBJ files", "*.obj")], initialdir=script_directory+'/obj')
 
 # Initialize an empty list to hold the line numbers
 nan_vertices = []
@@ -35,13 +35,13 @@ filtered_faces = [f for f in faces if not any(v in nan_vertices for v in f)]
 edge_faces = [f for f in faces if any(v in nan_vertices for v in f) and not all(v in nan_vertices for v in f)]
 # print(edge_faces)
 
-print("From edge faces, all nan vertices removed")
+# print("From edge faces, all nan vertices removed")
 cleaned_faces = []
 for f in edge_faces:
     # Remove values that are in the first list
     cleaned_list = [value for value in f if value not in nan_vertices]
     cleaned_faces.append(cleaned_list)
-print(cleaned_faces)
+# print(cleaned_faces)
 
 # print("Subtracted and corrected faces with nans eliminated")
 modified_faces = nan_correct(filtered_faces, nan_vertices)
@@ -56,7 +56,7 @@ obj_output = filedialog.asksaveasfilename(defaultextension='.obj',
                                         filetypes=[('OBJ files', '*.obj')],
                                         title='Save output file as',
                                         initialfile=f'output.obj',
-                                        initialdir=script_directory)
+                                        initialdir=script_directory+'/obj')
 
 # Delete all lines that contain "nan"
 with open(obj_file, 'r') as input_file, open(obj_output, 'w') as output_file:

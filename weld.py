@@ -5,13 +5,13 @@ from package.utils import count_vertices
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
-floo_file = filedialog.askopenfilename(filetypes=[("OBJ floor file", "*.obj")], initialdir=script_directory)
-ceil_file = filedialog.askopenfilename(filetypes=[("OBJ ceiling file", "*.obj")], initialdir=script_directory)
+floo_file = filedialog.askopenfilename(filetypes=[("OBJ floor file", "*.obj")], initialdir=script_directory+'/obj')
+ceil_file = filedialog.askopenfilename(filetypes=[("OBJ ceiling file", "*.obj")], initialdir=script_directory+'/obj')
 combined_file = filedialog.asksaveasfilename(defaultextension='.obj',
                                         filetypes=[('OBJ files', '*.obj')],
                                         title='Save output file as',
                                         initialfile=f'combined.obj',
-                                        initialdir=script_directory)
+                                        initialdir=script_directory+'/obj')
 
 floo_faces = get_faces(floo_file)
 ceil_faces = get_faces(ceil_file)
