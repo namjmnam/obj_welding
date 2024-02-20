@@ -4,14 +4,14 @@ from package.utils import get_faces
 from package.utils import nan_correct
 import time
 
-# Start the timer
-start_time = time.time()
-
 # Get the script directory
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
 obj_file = filedialog.askopenfilename(filetypes=[("OBJ files", "*.obj")], initialdir=script_directory+'/obj')
 print(obj_file)
+
+# Start the timer
+start_time = time.time()
 
 # Initialize an empty list to hold the line numbers
 nan_vertices = []
