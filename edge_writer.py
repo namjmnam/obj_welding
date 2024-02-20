@@ -7,6 +7,9 @@ from package.utils import count_vertices
 # Get the script directory
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
+# Needed for triangles
+xMax = 50
+
 obj_file = filedialog.askopenfilename(filetypes=[("Original floor or celing OBJ file", "*.obj")], initialdir=script_directory+'/obj')
 
 # Initialize an empty list to hold the line numbers
@@ -35,6 +38,28 @@ for f in edge_faces:
     # Remove values that are in the first list
     cleaned_list = [value for value in f if value not in nan_vertices]
     cleaned_faces.append(cleaned_list)
+# print(cleaned_faces)
+
+# Now, triangles algorithm
+for f in cleaned_faces:
+    if len(f)==3:
+        # 좌상/우상
+        if f[1]-f[0]==1:
+            # 좌상
+            if f[2]-f[0]==xMax:
+                f.pop(0)
+            # 우상
+            elif f[2]-f[0]==xMax+1:
+                f.pop(1)
+
+        # 좌하/우하
+        elif f[1]-f[2]==1:
+            # 좌하
+            if f[1]-f[0]==xMax+1:
+                f.pop(2)
+            # 우하
+            elif f[1]-f[0]==xMax:
+                f.pop(1)
 # print(cleaned_faces)
 
 # print("Subtracted and corrected cleaned faces with nans eliminated")
@@ -67,12 +92,3 @@ with open(target_file, 'r') as target, open(obj_output, 'w') as output:
     # Add edge lines
     for v in edge_vertices:
         output.write(' '.join(['l', str(v), str(v+floor_v_count)])+'\n')
-
-# 삼각형에 대한 고찰
-# 삼각형이 어느 대각선을 가지고 있는지, 어느 방향인지
-# 삼각형일 경우 대각선만 edge로 만들기
-# 예: 1 2 12 11 (xmax = 10)
-# 좌상: 1 2 11 - 1과 2가 1 차이인 경우 + 1과 3이 10차이인 경우: 1번째 제거
-# 우상: 1 2 12 - 1과 2가 1 차이인 경우 + 1과 3이 11차이인 경우: 2번째 제거
-# 좌하: 1 12 11 - 2와 3이 1 차이인 경우 + 1과 2가 11차이인 경우: 3번째 제거
-# 우하: 2 12 11 - 2와 3이 1 차이인 경우 + 1과 2가 10차이인 경우: 2번째 제거
