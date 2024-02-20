@@ -2,11 +2,12 @@ import os
 from tkinter import filedialog
 from package.utils import get_faces
 from package.utils import nan_correct
+from package.utils import count_vertices
 
 # Get the script directory
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
-obj_file = filedialog.askopenfilename(filetypes=[("OBJ files", "*.obj")], initialdir=script_directory+'/obj')
+obj_file = filedialog.askopenfilename(filetypes=[("Original floor or celing OBJ file", "*.obj")], initialdir=script_directory+'/obj')
 
 # Initialize an empty list to hold the line numbers
 nan_vertices = []
@@ -20,16 +21,9 @@ with open(obj_file, 'r') as file:
             # Add the line number to the list
             nan_vertices.append(line_number)
 
-# print("All nans")
-# print(nan_vertices)
-
 # Get all lists of faces
 faces = get_faces(obj_file)
 # print(faces)
-
-# print("Faces without nans")
-filtered_faces = [f for f in faces if not any(v in nan_vertices for v in f)]
-# print(filtered_faces)
 
 # print("Faces with nans but not all are nans")
 edge_faces = [f for f in faces if any(v in nan_vertices for v in f) and not all(v in nan_vertices for v in f)]
@@ -43,39 +37,42 @@ for f in edge_faces:
     cleaned_faces.append(cleaned_list)
 # print(cleaned_faces)
 
-# print("Subtracted and corrected faces with nans eliminated")
-modified_faces = nan_correct(filtered_faces, nan_vertices)
-# print(modified_faces)
-
 # print("Subtracted and corrected cleaned faces with nans eliminated")
 modified_cleaned_faces = nan_correct(cleaned_faces, nan_vertices)
 # print(modified_cleaned_faces)
 
-print("Vertices located on the edge")
+# print("Vertices located on the edge")
 edge_vertices = sorted(set(sum(modified_cleaned_faces, [])))
-print(edge_vertices)
+# print(edge_vertices)
+
+# OBJ after nan removed
+refined_file = filedialog.askopenfilename(filetypes=[("Refined OBJ file", "*.obj")], initialdir=script_directory+'/obj')
+floor_v_count = count_vertices(refined_file)
+
+# Combined OBJ
+target_file = filedialog.askopenfilename(filetypes=[("Target file", "*.obj")], initialdir=script_directory+'/obj')
 
 # Write to the output file
 obj_output = filedialog.asksaveasfilename(defaultextension='.obj',
                                         filetypes=[('OBJ files', '*.obj')],
                                         title='Save output file as',
-                                        initialfile=f'output.obj',
+                                        initialfile=f'edge_output.obj',
                                         initialdir=script_directory+'/obj')
 
-# Delete all lines that contain "nan"
-with open(obj_file, 'r') as input_file, open(obj_output, 'w') as output_file:
-    # Iterate over each line in the original file
-    for line in input_file:
-        # If "nan" is not found in the line, write it to the new file
-        if "nan" not in line and "f" not in line:
-            output_file.write(line)
+with open(target_file, 'r') as target, open(obj_output, 'w') as output:
+    # Write all lines
+    for line in target:
+        output.write(line)
 
-    # Add new face lines
-    for f in modified_faces:
-        # print('f '+' '.join(str(num) for num in f)) 
-        output_file.write('f '+' '.join(str(num) for num in f)+'\n')
+    # Add edge lines
+    for v in edge_vertices:
+        output.write(' '.join(['l', str(v), str(v+floor_v_count)])+'\n')
 
-    # Add triangles from cleaned faces
-    for f in modified_cleaned_faces:
-        if len(f)>=3:
-            output_file.write('f '+' '.join(str(num) for num in f)+'\n')
+# 삼각형에 대한 고찰
+# 삼각형이 어느 대각선을 가지고 있는지, 어느 방향인지
+# 삼각형일 경우 대각선만 edge로 만들기
+# 예: 1 2 12 11 (xmax = 10)
+# 좌상: 1 2 11 - 1과 2가 1 차이인 경우 + 1과 3이 10차이인 경우: 1번째 제거
+# 우상: 1 2 12 - 1과 2가 1 차이인 경우 + 1과 3이 11차이인 경우: 2번째 제거
+# 좌하: 1 12 11 - 2와 3이 1 차이인 경우 + 1과 2가 11차이인 경우: 3번째 제거
+# 우하: 2 12 11 - 2와 3이 1 차이인 경우 + 1과 2가 10차이인 경우: 2번째 제거
